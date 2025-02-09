@@ -1,0 +1,7 @@
+{% macro render_document(doc, indent=0) %} {% for key, value in doc.items() %}
+<div style="margin-left: {{ indent }}px; margin-bottom: 8px;">
+  <strong>{{ key }}:</strong>
+  {% if value is string %} {{ value }} {% elif value is mapping %} {{
+  render_document(value, indent + 20) }} {% endif %}
+</div>
+{% endfor %} {% endmacro %}

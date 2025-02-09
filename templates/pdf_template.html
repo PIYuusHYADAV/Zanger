@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        line-height: 1.6;
+      }
+      h1,
+      h2 {
+        text-align: start;
+      }
+      .document-section {
+        margin-bottom: 20px;
+        padding: 10px;
+        border-radius: 4px;
+      }
+      .section-title {
+        font-size: 1.4em;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 5px;
+        color: #4caf50;
+      }
+      .document-subsection {
+        margin-left: 20px;
+        margin-bottom: 10px;
+      }
+      ul.nested-list {
+        margin-left: 20px;
+        padding-left: 20px;
+        list-style-type: disc;
+      }
+      ul.nested-list li {
+        margin-bottom: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    {% macro render_nested(doc) %}
+    <ul class="nested-list">
+      {% for key, value in doc.items() %}
+      <li>
+        <strong>{{ key }}:</strong>
+        {% if value is mapping %} {{ render_nested(value) }} {% elif value is
+        iterable and value is not string %}
+        <ul>
+          {% for item in value %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+        {% else %} {{ value }} {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endmacro %} {% if document %} {# Extract the display order and content
+    separately #} {% set order = document.displayOrder %} {# Remove the
+    displayOrder key from the content to obtain only the document body #} {% set
+    keys = document.keys()|list %} {% set contentKey = keys|reject("equalto",
+    "displayOrder")|list|first %}
+    <h2><strong>{{ contentKey }}</strong></h2>
+    {% set content = document[contentKey] %} {# Iterate main sections in the
+    order defined in displayOrder.mainSections #} {% for section in
+    order.mainSections %} {% if content[section] is defined %}
+    <div class="document-section">
+      <div class="section-title"><strong>{{ section }}</strong></div>
+      {# If the section is "ASSIGNMENT", we use the assignmentSections order #}
+      {% if section == "ASSIGNMENT" %} {% set assignContent = content[section]
+      %} {% for asSection in order.assignmentSections %} {% if
+      assignContent[asSection] is defined %}
+      <div class="document-subsection">
+        <div class="section-title"><strong>{{ asSection }}</strong></div>
+        {{ render_nested(assignContent[asSection]) }}
+      </div>
+      {% endif %} {% endfor %} {% else %} {{ render_nested(content[section]) }}
+      {% endif %}
+    </div>
+    {% endif %} {% endfor %} {% else %}
+    <p>No document data available.</p>
+    {% endif %}
+  </body>
+</html>

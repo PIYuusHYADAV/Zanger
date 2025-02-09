@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Legal Document Editor</title>
+    <link rel="stylesheet" href="{{ static_url('style.css') }}" />
+    <style>
+      /* Additional styling for the Download PDF button */
+      #downloadButton {
+        background-color: #4caf50;
+        border: none;
+        color: white;
+        padding: 8px 16px;
+        font-size: 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-left: 10px;
+      }
+
+      #downloadButton:hover {
+        background-color: #45a049;
+      }
+
+      /* Basic Reset */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        color: #333;
+      }
+
+      .container {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 20px;
+        height: 100vh;
+        background-color: #eaeaea;
+      }
+
+      .panel {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      h2 {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+        color: #2c3e50;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 10px;
+      }
+
+      .document-preview {
+        font-family: "Times New Roman", Times, serif;
+        font-size: 14px;
+        line-height: 1.6;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background-color: #fff;
+        min-height: 500px;
+        overflow-y: auto;
+        color: #333;
+        word-wrap: break-word;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 1200px) {
+        .container {
+          flex-direction: column;
+        }
+        .panel {
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .button-group {
+          flex-direction: column;
+          gap: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Left Panel: Document Preview -->
+      <div class="panel">
+        <h2>
+          Document Preview
+          <!-- Download button at top left -->
+          <button id="downloadButton" onclick="downloadPdf()">
+            Download PDF
+          </button>
+        </h2>
+        <div id="documentPreview" class="document-preview"></div>
+      </div>
+
+      <!-- Right Panel: Key Editor -->
+      <div class="panel">
+        <h2>Key Editor</h2>
+        <div id="keyContainer"></div>
+      </div>
+    </div>
+
+    <script>
+      // Initialize document data from server
+      window.currentDocument = {{ document | tojson | safe }};
+    </script>
+
+    <!-- Load main script -->
+    <script src="{{ static_url('script.js') }}"></script>
+  </body>
+</html>
