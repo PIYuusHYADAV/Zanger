@@ -16,8 +16,10 @@ from typing import Dict, Any, Optional
 # Load environment variables
 load_dotenv('.env')
 
+
 # Initialize FastAPI app
 app = FastAPI()
+port = int(os.getenv("PORT", 8000))
 
 # Enable CORS
 app.add_middleware(
@@ -148,4 +150,4 @@ async def download(request: DownloadRequest):
 if __name__ == "_main_":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=port)
