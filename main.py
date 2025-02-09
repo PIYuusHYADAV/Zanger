@@ -19,7 +19,7 @@ load_dotenv('.env')
 
 # Initialize FastAPI app
 app = FastAPI()
-port = int(os.getenv("PORT", 8000))
+
 
 # Enable CORS
 app.add_middleware(
@@ -150,4 +150,7 @@ async def download(request: DownloadRequest):
 if __name__ == "_main_":
     import uvicorn
 
+    port = int(os.getenv("PORT", 8000))
+    
+    # Ensure binding to all network interfaces (0.0.0.0)
     uvicorn.run(app, host="0.0.0.0", port=port)
