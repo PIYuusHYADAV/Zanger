@@ -40,7 +40,7 @@ openai_client = AsyncOpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 # Pydantic models for request validation
 class UpdateValueRequest(BaseModel):
@@ -139,6 +139,6 @@ async def download(request: DownloadRequest):
             content={"error": "Failed to generate PDF"}
         )
 
-if _name_ == "_main_":
+if __name__ == "_main_":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
