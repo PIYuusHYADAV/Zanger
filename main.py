@@ -1,9 +1,9 @@
 from fastapi import FastAPI, Request, Response
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from openai import OpenAI
+from openai import AsyncOpenAI
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 from weasyprint import HTML
 from pydantic import BaseModel
@@ -16,10 +16,8 @@ from typing import Dict, Any, Optional
 # Load environment variables
 load_dotenv('.env')
 
-
 # Initialize FastAPI app
 app = FastAPI()
-
 
 # Enable CORS
 app.add_middleware(
@@ -37,13 +35,12 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 templates.env.globals['static_url'] = lambda path: f"/static/{path}"
 
-# Initialize OpenAI client
-openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+# Initialize OpenAI async client
+openai_client = AsyncOpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+logger = logging.getLogger(_name_)
 
 # Pydantic models for request validation
 class UpdateValueRequest(BaseModel):
@@ -52,16 +49,15 @@ class UpdateValueRequest(BaseModel):
     current_value: str
     custom_prompt: Optional[str] = None
 
-
 class DownloadRequest(BaseModel):
     document: Dict[str, Any]
     format: str
 
-
+# Async AI request with retry mechanism
 @retry(wait=wait_random_exponential(min=1, max=40), stop=stop_after_attempt(3))
-def chat_completion_request(messages, model='gpt-4'):
+async def chat_completion_request(messages, model='gpt-4'):
     try:
-        response = openai_client.chat.completions.create(
+        response = await openai_client.chat.completions.create(
             messages=messages,
             max_tokens=1000,
             model=model,
@@ -71,7 +67,6 @@ def chat_completion_request(messages, model='gpt-4'):
     except Exception as e:
         logger.error(f"Chat completion request failed: {str(e)}")
         return 'Error processing request'
-
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -89,10 +84,9 @@ async def index(request: Request):
             {"request": request, "document": {"Assignment of copyright": {}}}
         )
 
-
 @app.post("/update_value")
 async def update_value(request: UpdateValueRequest):
-    response = chat_completion_request([
+    response = await chat_completion_request([
         {"role": "system", "content": "You are a legal document assistant."},
         {"role": "user",
          "content": f"For this document: {json.dumps(request.document)}\nSuggest a value for '{request.key}' (current: {request.current_value}). Additional context: {request.custom_prompt}"}
@@ -113,7 +107,6 @@ async def update_value(request: UpdateValueRequest):
             status_code=500,
             content={"error": "Failed to process response"}
         )
-
 
 @app.post("/download")
 async def download(request: DownloadRequest):
@@ -146,11 +139,6 @@ async def download(request: DownloadRequest):
             content={"error": "Failed to generate PDF"}
         )
 
-
-if __name__ == "_main_":
+if _name_ == "_main_":
     import uvicorn
-
-    port = int(os.getenv("PORT", 8000))
-    
-    # Ensure binding to all network interfaces (0.0.0.0)
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
