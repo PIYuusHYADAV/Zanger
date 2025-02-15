@@ -561,5 +561,107 @@ async function downloadPdf() {
     alert(error.message);
   }
 }
+function downloadWord() {
+  // Retrieve the inner HTML from the document preview panel.
+  const content = document.getElementById("documentPreview").innerHTML;
+
+  // Define inline CSS styles for a polished, well-spaced Word document.
+  const styles = `
+    <style>
+      /* Global styling for a clean, professional look */
+      body {
+        font-family: "Times New Roman", serif;
+        font-size: 14px;
+        margin: 20px;
+        line-height: 1.6;
+        color: #333;
+        background-color: #fff;
+      }
+      /* Headings styling */
+      h1, h2, h3, h4, h5, h6 {
+        color: #2c3e50;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 5px;
+        margin-top: 20px;
+        margin-bottom: 10px;
+      }
+      /* Paragraph styling */
+      p {
+        margin: 10px 0;
+      }
+      /* Table styling, if present */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+      }
+      table, th, td {
+        border: 1px solid #ddd;
+      }
+      th, td {
+        padding: 8px;
+        text-align: left;
+      }
+      /* Horizontal rule styling */
+      hr {
+        border: none;
+        border-top: 1px solid #eee;
+        margin: 20px 0;
+      }
+      /* Keys styling: keys are bold and have a right margin */
+      .key, strong, b {
+        font-weight: bold;
+        margin-right: 8px;
+      }
+      /* Values styling: normal text */
+      .value {
+        font-weight: normal;
+      }
+      /* Nested content styling: additional left margin for proper spacing */
+      .nested {
+        margin-left: 30px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+      }
+      /* Optional: spacing for nested keys if they use the .key class */
+      .nested .key, .nested strong, .nested b {
+        margin-right: 10px;
+      }
+    </style>
+  `;
+
+  // Wrap the content and styles into a full HTML document.
+  const htmlContent = `
+    <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Document</title>
+        ${styles}
+      </head>
+      <body>
+        ${content}
+      </body>
+    </html>
+  `;
+
+  // Create a Blob object with a MIME type recognized by Word.
+  const blob = new Blob([htmlContent], { type: "application/msword" });
+
+  // Create a URL for the Blob object.
+  const url = URL.createObjectURL(blob);
+
+  // Create a temporary link element.
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "document.doc"; // This will be the downloaded file's name.
+
+  // Append the link to the document and simulate a click to trigger the download.
+  document.body.appendChild(link);
+  link.click();
+
+  // Clean up by removing the link and revoking the object URL.
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 // Download document
