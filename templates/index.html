@@ -6,21 +6,6 @@
     <title>Legal Document Editor</title>
     <link rel="stylesheet" href="{{ static_url('style.css') }}" />
     <style>
-      /* Additional styling for the Download PDF/Word buttons */
-      #downloadButton {
-        background-color: #4caf50;
-        border: none;
-        color: white;
-        padding: 8px 16px;
-        font-size: 16px;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-left: 10px;
-      }
-      #downloadButton:hover {
-        background-color: #45a049;
-      }
-
       /* Basic Reset */
       * {
         margin: 0;
@@ -47,6 +32,7 @@
         padding: 20px;
         flex: 1;
         overflow-y: auto;
+        position: relative;
       }
       h2 {
         font-size: 1.2rem;
@@ -55,6 +41,45 @@
         border-bottom: 2px solid #ddd;
         padding-bottom: 10px;
       }
+      /* Button Styling */
+      .btn {
+        font-size: 0.9rem;
+        padding: 8px 14px;
+        margin: 5px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      .btn-download {
+        background-color: #4caf50;
+        color: white;
+      }
+      .btn-download:hover {
+        background-color: #45a049;
+      }
+      .btn-edit {
+        background-color: #007bff;
+        color: white;
+      }
+      .btn-edit:hover {
+        background-color: #0069d9;
+      }
+      .btn-add {
+        background-color: #17a2b8;
+        color: white;
+      }
+      .btn-add:hover {
+        background-color: #138496;
+      }
+      .btn-cancel {
+        background-color: #dc3545;
+        color: white;
+      }
+      .btn-cancel:hover {
+        background-color: #c82333;
+      }
+      /* Document Preview */
       .document-preview {
         font-family: "Times New Roman", Times, serif;
         font-size: 14px;
@@ -68,25 +93,6 @@
         color: #333;
         word-wrap: break-word;
       }
-
-      /* Editor control buttons styling */
-      #editorControls {
-        margin-bottom: 10px;
-      }
-      #editorControls button {
-        background-color: #007bff;
-        border: none;
-        color: #fff;
-        padding: 6px 12px;
-        margin-right: 10px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 14px;
-      }
-      #editorControls button:hover {
-        background-color: #0069d9;
-      }
-
       /* Modal styling */
       .modal {
         position: fixed;
@@ -103,7 +109,7 @@
         margin: 10% auto;
         padding: 20px;
         border: 1px solid #888;
-        width: 320px;
+        width: 350px;
         border-radius: 8px;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         position: relative;
@@ -126,69 +132,26 @@
         margin-bottom: 15px;
         font-family: Arial, sans-serif;
       }
-      .modal-content input[type="text"] {
+      .modal-content label {
+        display: block;
+        margin-top: 8px;
+        font-size: 14px;
+      }
+      .modal-content input[type="text"],
+      .modal-content input[type="number"],
+      .modal-content input[type="color"],
+      .modal-content select,
+      .modal-content textarea {
         width: 100%;
         padding: 6px 8px;
-        margin: 4px 0;
+        margin-top: 4px;
         border: 1px solid #ccc;
         border-radius: 4px;
-      }
-      .dialog-error {
-        color: red;
         font-size: 14px;
-        margin-bottom: 10px;
-        display: none;
       }
       .modal-buttons {
         margin-top: 15px;
         text-align: right;
-      }
-      .modal-buttons button {
-        background-color: #007bff;
-        border: none;
-        color: #fff;
-        padding: 6px 12px;
-        margin-left: 8px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 14px;
-      }
-      .modal-buttons button:hover {
-        background-color: #0069d9;
-      }
-      .cancel-button {
-        background-color: #dc3545;
-      }
-      .cancel-button:hover {
-        background-color: #c82333;
-      }
-
-      /* Styling for new inserted content */
-      .document-preview p {
-        margin: 10px 0;
-      }
-      .document-preview .key {
-        font-weight: bold;
-        margin-right: 5px;
-      }
-      .document-preview .value {
-        font-weight: normal;
-      }
-
-      /* Responsive Design */
-      @media (max-width: 1200px) {
-        .container {
-          flex-direction: column;
-        }
-        .panel {
-          width: 100%;
-        }
-      }
-      @media (max-width: 768px) {
-        .button-group {
-          flex-direction: column;
-          gap: 10px;
-        }
       }
     </style>
   </head>
@@ -198,119 +161,187 @@
       <div class="panel">
         <h2>
           Document Preview
-          <!-- Download buttons -->
-          <button id="downloadButton" onclick="downloadPdf()">
-            Download PDF
-          </button>
-          <button id="downloadButton" onclick="downloadWord()">
-            Download Word
-          </button>
-          <!-- Editor control buttons -->
+
           <div id="editorControls">
-            <button id="enableEditingButton" onclick="enableEditing()">
+            <button
+              class="btn btn-edit"
+              id="enableEditingButton"
+              onclick="enableEditing()"
+            >
               Enable Editing
             </button>
             <button
+              class="btn btn-edit"
               id="insertContentButton"
               onclick="openInsertDialog()"
               style="display: none"
             >
               Insert Content
             </button>
-          </div>
-          <!-- Modal dialog for inserting new content -->
-          <!-- Modal dialog for inserting new content -->
-          <!-- Modal dialog for inserting new content -->
-          <div id="insertDialog" class="modal" style="display: none">
-            <div class="modal-content" id="modalContent">
-              <span class="close" onclick="closeInsertDialog()">&times;</span>
-              <h3>Insert New Content</h3>
-              <div id="dialogError" class="dialog-error">
-                Please enter at least a key or a value.
-              </div>
-
-              <!-- Key and Value Text -->
-              <label for="newKey">Key:</label>
-              <input type="text" id="newKey" placeholder="Enter key" />
-              <br /><br />
-              <label for="newValue">Value:</label>
-              <input type="text" id="newValue" placeholder="Enter value" />
-              <br /><br />
-
-              <!-- Styling options for Key -->
-              <label for="keyFontSize">Key Font Size (px):</label>
-              <input
-                type="number"
-                id="keyFontSize"
-                placeholder="16"
-                min="1"
-                style="
-                  width: 100%;
-                  padding: 6px 8px;
-                  border: 1px solid #ccc;
-                  border-radius: 4px;
-                "
-              />
-              <br /><br />
-              <label for="keyColor">Key Color:</label>
-              <input
-                type="color"
-                id="keyColor"
-                value="#000000"
-                style="
-                  width: 100%;
-                  padding: 6px 8px;
-                  border: 1px solid #ccc;
-                  border-radius: 4px;
-                "
-              />
-              <br /><br />
-
-              <!-- Styling options for Value -->
-              <label for="valueFontSize">Value Font Size (px):</label>
-              <input
-                type="number"
-                id="valueFontSize"
-                placeholder="14"
-                min="1"
-                style="
-                  width: 100%;
-                  padding: 6px 8px;
-                  border: 1px solid #ccc;
-                  border-radius: 4px;
-                "
-              />
-              <br /><br />
-              <label for="valueColor">Value Color:</label>
-              <input
-                type="color"
-                id="valueColor"
-                value="#333333"
-                style="
-                  width: 100%;
-                  padding: 6px 8px;
-                  border: 1px solid #ccc;
-                  border-radius: 4px;
-                "
-              />
-              <br /><br />
-
-              <div class="modal-buttons">
-                <button onclick="insertNewContent()">Insert</button>
-                <button onclick="closeInsertDialog()" class="cancel-button">
-                  Cancel
-                </button>
-              </div>
-            </div>
+            <button class="btn btn-download" onclick="downloadWord()">
+              Download Word
+            </button>
           </div>
         </h2>
         <div id="documentPreview" class="document-preview"></div>
       </div>
-
       <!-- Right Panel: Key Editor -->
       <div class="panel">
-        <h2>Key Editor</h2>
+        <h2>
+          Key Editor
+          <button
+            class="btn btn-add"
+            id="addKeyValueButton"
+            onclick="openAddKeyValueDialog()"
+          >
+            Add New Points
+          </button>
+          <button
+            class="btn btn-add"
+            id="addSubKeyValueButton"
+            onclick="openAddSubKeyValueDialog()"
+          >
+            Add Sub-Points
+          </button>
+        </h2>
         <div id="keyContainer"></div>
+      </div>
+    </div>
+
+    <!-- Modal for Inserting New Content (with font styling options) -->
+    <div id="insertDialog" class="modal" style="display: none">
+      <div class="modal-content" id="modalContent">
+        <span class="close" onclick="closeInsertDialog()">&times;</span>
+        <h3>Insert New Content</h3>
+        <div
+          id="dialogError"
+          class="dialog-error"
+          style="color: red; display: none"
+        >
+          Please enter at least a key or a value.
+        </div>
+        <!-- Key Input and Styling Options -->
+        <label for="newKey">Key:</label>
+        <input type="text" id="newKey" placeholder="Enter key" />
+        <label for="keyFontSize">Key Font Size (px):</label>
+        <input type="number" id="keyFontSize" placeholder="16" min="1" />
+        <label for="keyColor">Key Color:</label>
+        <input type="color" id="keyColor" value="#000000" />
+        <label for="keyFontFamily">Key Font Family:</label>
+        <select id="keyFontFamily">
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="'Times New Roman', serif">Times New Roman</option>
+          <option value="'Courier New', monospace">Courier New</option>
+          <option value="Georgia, serif">Georgia</option>
+        </select>
+        <label for="keyFontStyle">Key Font Style:</label>
+        <select id="keyFontStyle">
+          <option value="normal">Normal</option>
+          <option value="italic">Italic</option>
+        </select>
+        <label for="keyFontWeight">Key Font Weight:</label>
+        <select id="keyFontWeight">
+          <option value="bold">Bold</option>
+          <option value="normal">Normal</option>
+        </select>
+        <label for="keyTextDecoration">Key Text Decoration:</label>
+        <select id="keyTextDecoration">
+          <option value="none">None</option>
+          <option value="underline">Underline</option>
+        </select>
+        <!-- Value Input and Styling Options -->
+        <label for="newValue">Value:</label>
+        <input type="text" id="newValue" placeholder="Enter value" />
+        <label for="valueFontSize">Value Font Size (px):</label>
+        <input type="number" id="valueFontSize" placeholder="14" min="1" />
+        <label for="valueColor">Value Color:</label>
+        <input type="color" id="valueColor" value="#333333" />
+        <label for="valueFontFamily">Value Font Family:</label>
+        <select id="valueFontFamily">
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="'Times New Roman', serif">Times New Roman</option>
+          <option value="'Courier New', monospace">Courier New</option>
+          <option value="Georgia, serif">Georgia</option>
+        </select>
+        <label for="valueFontStyle">Value Font Style:</label>
+        <select id="valueFontStyle">
+          <option value="normal">Normal</option>
+          <option value="italic">Italic</option>
+        </select>
+        <label for="valueFontWeight">Value Font Weight:</label>
+        <select id="valueFontWeight">
+          <option value="normal">Normal</option>
+          <option value="bold">Bold</option>
+        </select>
+        <label for="valueTextDecoration">Value Text Decoration:</label>
+        <select id="valueTextDecoration">
+          <option value="none">None</option>
+          <option value="underline">Underline</option>
+        </select>
+        <div class="modal-buttons">
+          <button class="btn btn-add" onclick="insertNewContent()">
+            Insert
+          </button>
+          <button class="btn btn-cancel" onclick="closeInsertDialog()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Adding Key-Value Pair under ASSIGNMENT (no styling options) -->
+    <div id="addKeyValueDialog" class="modal" style="display: none">
+      <div class="modal-content" id="addModalContent">
+        <span class="close" onclick="closeAddKeyValueDialog()">&times;</span>
+        <h3>Add Key-Value Pair (ASSIGNMENT)</h3>
+        <div
+          id="addDialogError"
+          class="dialog-error"
+          style="color: red; display: none"
+        >
+          Please enter at least a key or a value.
+        </div>
+        <label for="newKVKey">Key:</label>
+        <input type="text" id="newKVKey" placeholder="Enter key" />
+        <label for="newKVValue">Value:</label>
+        <input type="text" id="newKVValue" placeholder="Enter value" />
+        <div class="modal-buttons">
+          <button class="btn btn-add" onclick="addKeyValuePair()">Add</button>
+          <button class="btn btn-cancel" onclick="closeAddKeyValueDialog()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Adding Sub Key-Value Pair (no styling options) -->
+    <div id="addSubKeyValueDialog" class="modal" style="display: none">
+      <div class="modal-content" id="subModalContent">
+        <span class="close" onclick="closeAddSubKeyValueDialog()">&times;</span>
+        <h3>Add Sub Key-Value Pair</h3>
+        <div
+          id="subDialogError"
+          class="dialog-error"
+          style="color: red; display: none"
+        >
+          Please select a parent key and enter both sub key and sub value.
+        </div>
+        <!-- Parent Key Dropdown (populated dynamically) -->
+        <label for="parentKeySelect">Parent Key (in ASSIGNMENT):</label>
+        <select id="parentKeySelect"></select>
+        <!-- Sub Key and Sub Value Inputs -->
+        <label for="subKey">Sub Key:</label>
+        <input type="text" id="subKey" placeholder="Enter sub key" />
+        <label for="subValue">Sub Value:</label>
+        <input type="text" id="subValue" placeholder="Enter sub value" />
+        <div class="modal-buttons">
+          <button class="btn btn-add" onclick="addSubKeyValuePair()">
+            Add Sub Key-Value
+          </button>
+          <button class="btn btn-cancel" onclick="closeAddSubKeyValueDialog()">
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
 
@@ -318,8 +349,6 @@
       // Initialize document data from server
       window.currentDocument = {{ document | tojson | safe }};
     </script>
-
-    <!-- Load main script -->
     <script src="{{ static_url('script.js') }}"></script>
   </body>
 </html>
