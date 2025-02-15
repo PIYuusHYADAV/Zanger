@@ -663,5 +663,115 @@ function downloadWord() {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+// Save the caret position so that inserted content goes to the correct location.
+let savedRange = null;
 
-// Download document
+// Save selection whenever the user clicks or types in the document preview.
+const preview = document.getElementById("documentPreview");
+if (preview) {
+  preview.addEventListener("mouseup", saveSelection);
+  preview.addEventListener("keyup", saveSelection);
+}
+
+function saveSelection() {
+  const sel = window.getSelection();
+  if (sel.rangeCount > 0) {
+    savedRange = sel.getRangeAt(0);
+  }
+}
+
+// Enable editing mode for the document preview.
+function enableEditing() {
+  const preview = document.getElementById("documentPreview");
+  if (!preview) return;
+  preview.contentEditable = true; // Make content editable
+  preview.style.border = "1px dashed #aaa"; // Visual cue for editing mode
+
+  // Show the "Insert Content" button for adding new content.
+  document.getElementById("insertContentButton").style.display = "inline-block";
+  // Optionally, hide the enable editing button if you don't want repeated clicks.
+  document.getElementById("enableEditingButton").style.display = "none";
+}
+
+// Open the modal dialog.
+function openInsertDialog() {
+  document.getElementById("insertDialog").style.display = "block";
+  // Focus the key input when the dialog opens.
+  document.getElementById("newKey").focus();
+}
+
+// Close the modal dialog.
+function closeInsertDialog() {
+  document.getElementById("insertDialog").style.display = "none";
+  // Optionally, re-focus the preview so the user can continue editing.
+  document.getElementById("documentPreview").focus();
+}
+
+// Insert new content with styling for key and value.
+function insertNewContent() {
+  // Get the content inputs.
+  const key = document.getElementById("newKey").value.trim();
+  const value = document.getElementById("newValue").value.trim();
+
+  // Get styling inputs for keys.
+  const keyFontSize =
+    document.getElementById("keyFontSize").value.trim() || "16";
+  const keyColor = document.getElementById("keyColor").value || "#000000";
+
+  // Get styling inputs for values.
+  const valueFontSize =
+    document.getElementById("valueFontSize").value.trim() || "14";
+  const valueColor = document.getElementById("valueColor").value || "#333333";
+
+  // Validate that at least one field is filled.
+  if (key === "" && value === "") {
+    alert("Please enter at least a key or a value.");
+    return;
+  }
+
+  // Create a new paragraph element with inline styles.
+  const newPara = document.createElement("p");
+  newPara.innerHTML = `
+    <span class="key" style="font-size: ${keyFontSize}px; color: ${keyColor}; font-weight: bold;">
+      ${key}:
+    </span>
+    <span class="value" style="font-size: ${valueFontSize}px; color: ${valueColor}; font-weight: normal;">
+      ${value}
+    </span>
+  `;
+
+  // Insert the new paragraph at the saved caret position if available.
+  const preview = document.getElementById("documentPreview");
+  if (savedRange && preview.contains(savedRange.startContainer)) {
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+    // Remove any selected content.
+    savedRange.deleteContents();
+    // Insert the new node.
+    savedRange.insertNode(newPara);
+    // Move caret after the inserted node.
+    savedRange.setStartAfter(newPara);
+    savedRange.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  } else {
+    // If no valid range is available, append to the end.
+    preview.appendChild(newPara);
+  }
+
+  // Optionally, scroll the new content into view.
+  newPara.scrollIntoView({ behavior: "smooth" });
+
+  // Clear all input fields.
+  document.getElementById("newKey").value = "";
+  document.getElementById("newValue").value = "";
+  document.getElementById("keyFontSize").value = "";
+  document.getElementById("valueFontSize").value = "";
+  // Reset color inputs to defaults.
+  document.getElementById("keyColor").value = "#000000";
+  document.getElementById("valueColor").value = "#333333";
+
+  // Close the modal dialog.
+  closeInsertDialog();
+}
