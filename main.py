@@ -74,14 +74,13 @@ async def azure_chat_completion(messages):
             "max_tokens": 1000,
             "temperature": 0,
             "top_p": 1,
-            "stop": [],
-            'response_format': {"type": "text"}
+            "stop": []
+            # Removed response_format to match your working version
         })
         return response
     except Exception as e:
         logger.error(f"Azure chat completion failed: {str(e)}")
         return 'Error processing request'
-
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """Render the main editor page."""
@@ -158,9 +157,8 @@ async def generate_questions(request: QuestionGenerationRequest):
 async def update_value(request: UpdateValueRequest):
     """Get AI suggestions for document values."""
     response = await azure_chat_completion([
-        {"role": "system", "content": "You are a legal document assistant."},
-        {"role": "user",
-         "content": f"For this document: {json.dumps(request.document)}\nSuggest a value for '{request.key}' (current: {request.current_value}). Additional context: {request.custom_prompt}"}
+        {"role": "system", "content": "You are a legal document assistant. Provide direct, concise responses without explanations."},
+        {"role": "user", "content": f"Suggest a value for this field in the document. Field: '{request.key}', Current value: {request.current_value}. Context: {request.custom_prompt}"}
     ])
 
     if isinstance(response, str):
@@ -179,7 +177,6 @@ async def update_value(request: UpdateValueRequest):
             status_code=500,
             content={"error": "Failed to process response"}
         )
-
 @app.post("/fill-template")
 async def fill_template(request: AnswerMappingRequest):
     """Fill template with user answers."""
