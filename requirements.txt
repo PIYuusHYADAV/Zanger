@@ -6,3 +6,6 @@ weasyprint
 jinja2
 python-dotenv
 pydantic
+azure
+azure-ai-generative
+azure-ai-inference
