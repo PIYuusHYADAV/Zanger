@@ -20,14 +20,18 @@ const assignmentSectionOrder = [
   "11. Interpretation",
 ];
 
-// Initialize document when DOM is loaded
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
   console.log("Document initialization started");
   if (!window.currentDocument) {
     console.error("No document found in window.currentDocument");
     window.currentDocument = { "Assignment of copyright": {} };
   }
+
   try {
+    // Show questionnaire first
+      await showQuestionnaire();
+
+    // Then initialize the editor
     updatePreview();
     updateKeyEditor();
     console.log("Document initialization completed");
@@ -173,27 +177,27 @@ function insertNewContent() {
   }
   const newPara = document.createElement("p");
   newPara.innerHTML = `
-    <span class="key" style="
-      font-size: ${keyFontSize}px;
-      color: ${keyColor};
-      font-family: ${keyFontFamily};
-      font-style: ${keyFontStyle};
-      font-weight: ${keyFontWeight};
-      text-decoration: ${keyTextDecoration};
-      ">
-      ${key}:
-    </span>
-    <span class="value" style="
-      font-size: ${valueFontSize}px;
-      color: ${valueColor};
-      font-family: ${valueFontFamily};
-      font-style: ${valueFontStyle};
-      font-weight: ${valueFontWeight};
-      text-decoration: ${valueTextDecoration};
-      ">
-      ${value}
-    </span>
-  `;
+        <span class="key" style="
+            font-size: ${keyFontSize + "px"};
+            color: ${keyColor};
+            font-family: ${keyFontFamily};
+            font-style: ${keyFontStyle};
+            font-weight: ${keyFontWeight};
+            text-decoration: ${keyTextDecoration}
+        ">
+            ${key}:
+        </span>
+        <span class="value" style="
+            font-size: ${valueFontSize + "px"};
+            color: ${valueColor};
+            font-family: ${valueFontFamily};
+            font-style: ${valueFontStyle};
+            font-weight: ${valueFontWeight};
+            text-decoration: ${valueTextDecoration}
+        ">
+            ${value}
+        </span>
+    `;
   const previewElem = document.getElementById("documentPreview");
   if (savedRange && previewElem.contains(savedRange.startContainer)) {
     const sel = window.getSelection();
@@ -659,6 +663,92 @@ async function downloadPdf() {
     alert(error.message);
   }
 }
+
+// Questionnaire functions
+async function showQuestionnaire() {
+  try {
+    // Generate questions
+    const response = await fetch("/generate-questions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ document: window.currentDocument }),
+    });
+
+    if (!response.ok) throw new Error("Failed to generate questions");
+
+    const questions = await response.json();
+
+    // Create HTML for questions
+    const questionsHtml = Object.entries(questions)
+      .map(
+        ([key, question]) => `
+            <div class="question-item" style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">${question}</label>
+                <input type="text" class="question-input" data-key="${key}" style="width: 100%; padding: 8px;">
+            </div>
+        `
+      )
+      .join("");
+
+    // Insert questions into modal
+    document.getElementById("questionsContainer").innerHTML = questionsHtml;
+
+    // Show modal
+    document.getElementById("questionnaireModal").style.display = "block";
+  } catch (error) {
+    console.error("Error showing questionnaire:", error);
+    // If there's an error, skip questionnaire and show editor
+    closeQuestionnaireModal();
+  }
+}
+
+function closeQuestionnaireModal() {
+  document.getElementById("questionnaireModal").style.display = "none";
+}
+
+async function submitQuestionnaire() {
+  try {
+    // Collect answers
+    const answers = {};
+    document.querySelectorAll(".question-input").forEach((input) => {
+      answers[input.dataset.key] = input.value.trim();
+    });
+
+    // Get questions from inputs
+    const questions = {};
+    document.querySelectorAll(".question-input").forEach((input) => {
+      questions[input.dataset.key] = input.previousElementSibling.textContent;
+    });
+
+    // Submit answers
+    const response = await fetch("/fill-template", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        document: window.currentDocument,
+        questions,
+        answers,
+      }),
+    });
+
+    if (!response.ok) throw new Error("Failed to process answers");
+
+    // Update document with filled template
+    const filledTemplate = await response.json();
+    window.currentDocument = filledTemplate;
+
+    // Close modal and update editor
+    closeQuestionnaireModal();
+    updatePreview();
+    updateKeyEditor();
+  } catch (error) {
+    console.error("Error submitting questionnaire:", error);
+    alert(
+      "Error processing answers. Please try again or skip the questionnaire."
+    );
+  }
+}
+
 function downloadWord() {
   const content = document.getElementById("documentPreview").innerHTML;
   const styles = `
