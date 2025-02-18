@@ -84,6 +84,31 @@ async def index(request: Request):
             {"request": request, "document": {"Assignment of copyright": {}}}
         )
 
+# New Route: Consultancy Agreement using the new JSON structure and main.html template
+@app.get("/consultancy_agreement", response_class=HTMLResponse)
+async def consultancy_agreement(request: Request):
+    try:
+        # Load the JSON file with the new structure
+        with open('templates/ConsultancyAgreement.json', 'r') as f:
+            document = json.load(f)
+        return templates.TemplateResponse(
+            "main.html",
+            {"request": request, "document": document}
+        )
+    except Exception as e:
+        logger.error(f"Error loading consultancy agreement: {str(e)}")
+        fallback = {
+            "displayOrder": {
+                "mainSections": ["DATE", "1. PARTIES", "AGREEMENT", "EXECUTION"],
+                "agreementSections": []
+            },
+            "Consultancy Agreement": {}
+        }
+        return templates.TemplateResponse(
+            "main.html",
+            {"request": request, "document": fallback}
+        )
+
 @app.post("/update_value")
 async def update_value(request: UpdateValueRequest):
     response = await chat_completion_request([
