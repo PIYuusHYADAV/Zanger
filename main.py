@@ -3,9 +3,9 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from openai import AsyncOpenAI
+from azure.ai.inference import ChatCompletionsClient
+from azure.core.credentials import AzureKeyCredential
 from tenacity import retry, wait_random_exponential, stop_after_attempt
-from weasyprint import HTML
 from pydantic import BaseModel
 import logging
 import os
@@ -28,21 +28,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Setup static files - IMPORTANT: Create these directories if they don't exist
+# Setup static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Setup templates with custom directory configuration
+# Setup templates
 templates = Jinja2Templates(directory="templates")
 templates.env.globals['static_url'] = lambda path: f"/static/{path}"
 
-# Initialize OpenAI async client
-openai_client = AsyncOpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+# Initialize Azure AI client
+azure_client = ChatCompletionsClient(
+    endpoint="https://ai-rohitmishramanit6459ai171081160941.services.ai.azure.com/models",
+    credential=AzureKeyCredential(os.getenv('AZURE_API_KEY'))
+)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Pydantic models for request validation
+# Pydantic models
+class QuestionGenerationRequest(BaseModel):
+    document: Dict[str, Any]
+
+class AnswerMappingRequest(BaseModel):
+    document: Dict[str, Any]
+    questions: Dict[str, str]
+    answers: Dict[str, str]
+
 class UpdateValueRequest(BaseModel):
     document: Dict[str, Any]
     key: str
@@ -53,23 +64,27 @@ class DownloadRequest(BaseModel):
     document: Dict[str, Any]
     format: str
 
-# Async AI request with retry mechanism
 @retry(wait=wait_random_exponential(min=1, max=40), stop=stop_after_attempt(3))
-async def chat_completion_request(messages, model='gpt-4'):
+async def azure_chat_completion(messages):
+    """Make a chat completion request to Azure AI with retry logic."""
     try:
-        response = await openai_client.chat.completions.create(
-            messages=messages,
-            max_tokens=1000,
-            model=model,
-            temperature=0
-        )
+        response = azure_client.complete({
+            "messages": messages,
+            "model": "gpt-4o-mini",
+            "max_tokens": 1000,
+            "temperature": 0,
+            "top_p": 1,
+            "stop": [],
+            'response_format': {"type": "text"}
+        })
         return response
     except Exception as e:
-        logger.error(f"Chat completion request failed: {str(e)}")
+        logger.error(f"Azure chat completion failed: {str(e)}")
         return 'Error processing request'
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
+    """Render the main editor page."""
     try:
         with open('templates/document.json', 'r') as f:
             document = json.load(f)
@@ -83,8 +98,7 @@ async def index(request: Request):
             "index.html",
             {"request": request, "document": {"Assignment of copyright": {}}}
         )
-
-# New Route: Consultancy Agreement using the new JSON structure and main.html template
+        
 @app.get("/consultancy_agreement", response_class=HTMLResponse)
 async def consultancy_agreement(request: Request):
     try:
@@ -109,9 +123,41 @@ async def consultancy_agreement(request: Request):
             {"request": request, "document": fallback}
         )
 
+@app.post("/generate-questions")
+async def generate_questions(request: QuestionGenerationRequest):
+    """Generate questions for document completion."""
+    try:
+        payload = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant specialized in legal document analysis."
+                },
+                {
+                    "role": "user",
+                    "content": f"Given this contract template, what minimum questions are required to fill this complete contract? Contract: {json.dumps(request.document)}. Output questions in json format with numeric keys (e.g., 'question1', 'question2') and string values."
+                }
+            ],
+            "model": "gpt-4o-mini",
+            "max_tokens": 4096,
+            "temperature": 0,
+            "top_p": 1,
+            "stop": [],
+            'response_format': {"type": "json_object"}
+        }
+
+        response = azure_client.complete(payload)
+        questions = json.loads(response.choices[0].message.content)
+        logger.info(f"Generated questions: {questions}")
+        return questions
+    except Exception as e:
+        logger.error(f"Error generating questions: {str(e)}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.post("/update_value")
 async def update_value(request: UpdateValueRequest):
-    response = await chat_completion_request([
+    """Get AI suggestions for document values."""
+    response = await azure_chat_completion([
         {"role": "system", "content": "You are a legal document assistant."},
         {"role": "user",
          "content": f"For this document: {json.dumps(request.document)}\nSuggest a value for '{request.key}' (current: {request.current_value}). Additional context: {request.custom_prompt}"}
@@ -125,6 +171,7 @@ async def update_value(request: UpdateValueRequest):
 
     try:
         new_value = response.choices[0].message.content.strip()
+        logger.info(f"Generated new value for {request.key}: {new_value}")
         return {"value": new_value}
     except Exception as e:
         logger.error(f"Error parsing AI response: {str(e)}")
@@ -133,37 +180,54 @@ async def update_value(request: UpdateValueRequest):
             content={"error": "Failed to process response"}
         )
 
+@app.post("/fill-template")
+async def fill_template(request: AnswerMappingRequest):
+    """Fill template with user answers."""
+    try:
+        mapping_payload = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant specialized in legal document completion."
+                },
+                {
+                    "role": "user",
+                    "content": f"Given these questions and answers: {json.dumps(request.questions)}\n\nAnd these answers: {json.dumps(request.answers)}\n\nMap these answers to the correct places in this template: {json.dumps(request.document)}\n\nReturn only the filled template as a valid JSON object."
+                }
+            ],
+            "model": "gpt-4o-mini",
+            "max_tokens": 4096,
+            "temperature": 0,
+            "top_p": 1,
+            "stop": [],
+            'response_format': {"type": "json_object"}
+        }
+
+        mapping_response = azure_client.complete(mapping_payload)
+        filled_template = json.loads(mapping_response.choices[0].message.content)
+        logger.info(f"Filled template generated")
+        return filled_template
+    except Exception as e:
+        logger.error(f"Error mapping answers: {str(e)}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.post("/download")
 async def download(request: DownloadRequest):
+    """Generate and download document."""
     if request.format != "pdf":
-        return JSONResponse(
-            status_code=400,
-            content={"error": "Format not supported"}
-        )
+        return JSONResponse(status_code=400, content={"error": "Format not supported"})
 
     try:
-        # Render the PDF HTML using template
         template = templates.get_template("pdf_template.html")
         rendered_html = template.render(document=request.document)
-
-        # Convert HTML to PDF using WeasyPrint
-        pdf = HTML(string=rendered_html).write_pdf()
-
-        # Create response with PDF content
         return Response(
-            content=pdf,
-            media_type="application/pdf",
-            headers={
-                "Content-Disposition": "attachment; filename=document.pdf"
-            }
+            content=rendered_html,
+            media_type="text/html",
         )
     except Exception as e:
-        logger.error(f"Error generating PDF: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": "Failed to generate PDF"}
-        )
+        logger.error(f"Error generating document: {str(e)}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
-if __name__ == "_main_":
+if __name__== "_main_":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
