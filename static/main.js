@@ -513,79 +513,105 @@ async function downloadPdf() {
     alert(error.message);
   }
 }
-function downloadWord() {
+function downloadWordDocx() {
   const content = document.getElementById("documentPreview").innerHTML;
-  const styles = `
-      <style>
-        body {
-          font-family: "Times New Roman", serif;
-          font-size: 14px;
-          margin: 20px;
-          line-height: 1.6;
-          color: #333;
-          background-color: #fff;
-        }
-        h1, h2, h3, h4, h5, h6 {
-          color: #2c3e50;
-          border-bottom: 1px solid #ccc;
-          padding-bottom: 5px;
-          margin-top: 20px;
-          margin-bottom: 10px;
-        }
-        p {
-          margin: 10px 0;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin: 15px 0;
-        }
-        table, th, td {
-          border: 1px solid #ddd;
-        }
-        th, td {
-          padding: 8px;
-          text-align: left;
-        }
-        hr {
-          border: none;
-          border-top: 1px solid #eee;
-          margin: 20px 0;
-        }
-        .key, strong, b {
-          font-weight: bold;
-          margin-right: 8px;
-        }
-        .value {
-          font-weight: normal;
-        }
-        .nested {
-          margin-left: 30px;
-          margin-top: 5px;
-          margin-bottom: 5px;
-        }
-        .nested .key, .nested strong, .nested b {
-          margin-right: 10px;
-        }
-      </style>
-    `;
-  const htmlContent = `
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>Document</title>
-          ${styles}
-        </head>
-        <body>
-          ${content}
-        </body>
-      </html>
-    `;
-  const blob = new Blob([htmlContent], { type: "application/msword" });
-  const url = URL.createObjectURL(blob);
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Document</title>
+        <style>
+          /* Global Styling */
+          body {
+            font-family: Verdana;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #333;
+            background-color: #fff;
+            margin: 20px;
+          }
+          /* Headings: All headings are set to 12px, no underline */
+          h1, h2, h3, h4, h5, h6 {
+            font-family: Verdana;
+            font-size: 12px;
+            color: #2c3e50;
+            margin: 25px 0 15px;
+            
+          }
+          /* Paragraphs */
+          p {
+            margin: 15px 0;
+          }
+          /* Lists */
+          ul, ol {
+            margin: 15px 0;
+            padding-left: 40px;
+          }
+          li {
+            margin-bottom: 10px;
+          }
+          /* Tables */
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+          }
+          table, th, td {
+            border: 1px solid #ddd;
+          }
+          th, td {
+            padding: 10px;
+            text-align: left;
+          }
+          /* Horizontal Rule */
+          hr {
+            border: none;
+           
+            margin: 30px 0;
+          }
+          /* Emphasized Text (Keys) */
+          .key, strong, b {
+            font-weight: bold;
+            margin-right: 15px;
+            display: inline-block;
+            min-width: 120px;
+          }
+          .value {
+            font-weight: normal;
+          }
+          /* Nested Content */
+          .nested {
+            margin-left: 30px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding-left: 10px;
+            border-left: 2px dashed #ddd;
+          }
+          /* Nested Keys: Ensure vertical spacing without modifying HTML structure */
+          .nested .key,
+          .nested strong,
+          .nested b {
+            display: block;
+            margin-bottom: 5px;
+          }
+        </style>
+      </head>
+      <body>
+        ${content}
+      </body>
+    </html>
+  `;
+
+  // Convert HTML to DOCX Blob using html-docx-js
+  const converted = htmlDocx.asBlob(html);
+
+  // Create a download link and trigger download
+  const url = URL.createObjectURL(converted);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "document.doc";
+  link.download = "document.docx";
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
