@@ -293,7 +293,7 @@
     <div id="addKeyValueDialog" class="modal" style="display: none">
       <div class="modal-content" id="addModalContent">
         <span class="close" onclick="closeAddKeyValueDialog()">&times;</span>
-        <h3>Add Key-Value Pair (AGREEMENT)</h3>
+        <h3>Add Key-Value Pair (ASSIGNMENT)</h3>
         <div
           id="addDialogError"
           class="dialog-error"
@@ -327,7 +327,7 @@
           Please select a parent key and enter both sub key and sub value.
         </div>
         <!-- Parent Key Dropdown (populated dynamically) -->
-        <label for="parentKeySelect">Parent Key (in Agreement):</label>
+        <label for="parentKeySelect">Parent Key (in ASSIGNMENT):</label>
         <select id="parentKeySelect"></select>
         <!-- Sub Key and Sub Value Inputs -->
         <label for="subKey">Sub Key:</label>
@@ -368,6 +368,6 @@
       // Initialize document data from server
       window.currentDocument = {{ document | tojson | safe }};
     </script>
-    <script src="{{ static_url('main.js') }}"></script>
+    <script src="{{ static_url('script.js') }}"></script>
   </body>
 </html>
