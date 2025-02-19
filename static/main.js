@@ -1,4 +1,3 @@
-// Extract display orders and document content from currentDocument
 const displayOrder = window.currentDocument.displayOrder || {
   mainSections: [],
   agreementSections: [],
@@ -6,22 +5,26 @@ const displayOrder = window.currentDocument.displayOrder || {
 const documentTitle = "Consultancy Agreement";
 
 // Initialize document when DOM is loaded
-document.addEventListener("DOMContentLoaded", function () {
-  console.log("Document initialization started");
-  if (!window.currentDocument) {
-    console.error("No document found in window.currentDocument");
-    window.currentDocument = {
-      displayOrder: { mainSections: [], agreementSections: [] },
-      [documentTitle]: {},
-    };
-  }
-  try {
-    updatePreview();
-    updateKeyEditor();
-    console.log("Document initialization completed");
-  } catch (error) {
-    console.error("Error during initialization:", error);
-  }
+document.addEventListener("DOMContentLoaded", async function () {
+    console.log("Document initialization started");
+    if (!window.currentDocument) {
+        console.error("No document found in window.currentDocument");
+        window.currentDocument = {
+            displayOrder: { mainSections: [], agreementSections: [] },
+            [documentTitle]: {},
+        };
+    }
+    try {
+        // Show questionnaire first
+        await showQuestionnaire();
+
+        // Then initialize the editor
+        updatePreview();
+        updateKeyEditor();
+        console.log("Document initialization completed");
+    } catch (error) {
+        console.error("Error during initialization:", error);
+    }
 });
 
 // Convert document object to HTML for preview using displayOrder
@@ -31,7 +34,7 @@ function convertToHtml(doc) {
   if (!mainDoc) return "";
   // Add a title
   html.push(
-    `<div class="document-title"><strong>${documentTitle}</strong></div>`
+    <div class="document-title"><strong>${documentTitle}</strong></div>
   );
 
   displayOrder.mainSections.forEach((section) => {
@@ -42,7 +45,7 @@ function convertToHtml(doc) {
   return html.join("");
 
   function processSection(key, value, level, path) {
-    const currentPath = path ? `${path}.${key}` : key;
+    const currentPath = path ? ${path}.${key} : key;
     const marginLeft = level * 20;
     let sectionClass = level === 0 ? "main-section" : "sub-section";
     // Render section header if content is not directly defined
@@ -159,29 +162,28 @@ function insertNewContent() {
     alert("Please enter at least a key or a value.");
     return;
   }
-  const newPara = document.createElement("p");
   newPara.innerHTML = `
-      <span class="key" style="
-        font-size: ${keyFontSize}px;
+    <span class="key" style="
+        font-size: ${keyFontSize + 'px'};
         color: ${keyColor};
         font-family: ${keyFontFamily};
         font-style: ${keyFontStyle};
         font-weight: ${keyFontWeight};
-        text-decoration: ${keyTextDecoration};
-        ">
+        text-decoration: ${keyTextDecoration}
+    ">
         ${key}:
-      </span>
-      <span class="value" style="
-        font-size: ${valueFontSize}px;
+    </span>
+    <span class="value" style="
+        font-size: ${valueFontSize + 'px'};
         color: ${valueColor};
         font-family: ${valueFontFamily};
         font-style: ${valueFontStyle};
         font-weight: ${valueFontWeight};
-        text-decoration: ${valueTextDecoration};
-        ">
+        text-decoration: ${valueTextDecoration}
+    ">
         ${value}
-      </span>
-    `;
+    </span>
+`;
   const previewElem = document.getElementById("documentPreview");
   if (savedRange && previewElem.contains(savedRange.startContainer)) {
     const sel = window.getSelection();
@@ -224,7 +226,7 @@ function getOrderedPaths(obj) {
   if (!mainDoc) return paths;
   displayOrder.mainSections.forEach((section) => {
     if (mainDoc[section]) {
-      processSectionForPaths(mainDoc[section], `${documentTitle}.${section}`);
+      processSectionForPaths(mainDoc[section], ${documentTitle}.${section});
     }
   });
   function processSectionForPaths(section, currentPath) {
@@ -232,7 +234,7 @@ function getOrderedPaths(obj) {
     let keys = Object.keys(section);
     // For AGREEMENT section, order keys by agreementSections if available
     if (
-      currentPath.startsWith(`${documentTitle}.AGREEMENT`) &&
+      currentPath.startsWith(${documentTitle}.AGREEMENT) &&
       displayOrder.agreementSections.length
     ) {
       const ordered = displayOrder.agreementSections.filter((k) =>
@@ -248,14 +250,14 @@ function getOrderedPaths(obj) {
       if (typeof value === "object" && value !== null) {
         if ("content" in value) {
           paths.push({
-            path: `${currentPath}.${key}.content`,
+            path: ${currentPath}.${key}.content,
             value: value.content,
           });
         } else {
-          processSectionForPaths(value, `${currentPath}.${key}`);
+          processSectionForPaths(value, ${currentPath}.${key});
         }
       } else if (typeof value === "string") {
-        paths.push({ path: `${currentPath}.${key}`, value: value });
+        paths.push({ path: ${currentPath}.${key}, value: value });
       }
     });
   }
@@ -292,8 +294,8 @@ function updateKeyEditor() {
       .map(({ path, value }) => {
         // For DATE and PARTIES, show only an Edit button; for others, show AI suggestion button as well.
         const isDateOrParties =
-          path.startsWith(`${documentTitle}.DATE`) ||
-          path.startsWith(`${documentTitle}.1. PARTIES`);
+          path.startsWith(${documentTitle}.DATE) ||
+          path.startsWith(${documentTitle}.1. PARTIES);
         return `
               <div class="key-editor-item">
                   <div class="key-path"><strong>${path}</strong></div>
@@ -311,7 +313,7 @@ function updateKeyEditor() {
                       <div class="button-group">
                            ${
                              isDateOrParties
-                               ? `<button class="btn btn-edit edit-button" onclick="editValue('${path}')">Edit</button>`
+                               ? <button class="btn btn-edit edit-button" onclick="editValue('${path}')">Edit</button>
                                : `<button class="btn btn-edit ai-button" onclick="updateValueWithAI('${path}')">Get AI Suggestion</button>
                                   <button class="btn btn-edit edit-button" onclick="editValue('${path}')">Edit</button>`
                            }
@@ -330,7 +332,7 @@ function updateKeyEditor() {
         const path = this.getAttribute("data-key");
         const originalValue = this.getAttribute("data-original-value");
         const saveButton = document.querySelector(
-          `button.save-button[onclick="saveValue('${path}')"]`
+          button.save-button[onclick="saveValue('${path}')"]
         );
         if (this.value !== originalValue) {
           saveButton.disabled = false;
@@ -347,15 +349,15 @@ function updateKeyEditor() {
 
 // Edit Value
 function editValue(path) {
-  const input = document.querySelector(`input[data-key="${path}"]`);
+  const input = document.querySelector(input[data-key="${path}"]);
   const editButton = document.querySelector(
-    `button.edit-button[onclick="editValue('${path}')"]`
+    button.edit-button[onclick="editValue('${path}')"]
   );
   const saveButton = document.querySelector(
-    `button.save-button[onclick="saveValue('${path}')"]`
+    button.save-button[onclick="saveValue('${path}')"]
   );
   const aiButton = document.querySelector(
-    `button.ai-button[onclick="updateValueWithAI('${path}')"]`
+    button.ai-button[onclick="updateValueWithAI('${path}')"]
   );
   input.readOnly = false;
   editButton.style.display = "none";
@@ -373,15 +375,15 @@ function splitPath(path) {
 
 // Save Value
 function saveValue(path) {
-  const input = document.querySelector(`input[data-key="${path}"]`);
+  const input = document.querySelector(input[data-key="${path}"]);
   const suggestion = document.querySelector(
-    `input[data-ai-suggestion="${path}"]`
+    input[data-ai-suggestion="${path}"]
   )?.value;
   const editButton = document.querySelector(
-    `button.edit-button[onclick="editValue('${path}')"]`
+    button.edit-button[onclick="editValue('${path}')"]
   );
   const aiButton = document.querySelector(
-    `button.ai-button[onclick="updateValueWithAI('${path}')"]`
+    button.ai-button[onclick="updateValueWithAI('${path}')"]
   );
   const newValue = suggestion || input.value;
   if (!newValue) return;
@@ -396,7 +398,7 @@ function saveValue(path) {
     let lastPart = pathParts[pathParts.length - 1];
     current[lastPart] = newValue;
     const previewElement = document.querySelector(
-      `span[data-value-path="${path}"]`
+      span[data-value-path="${path}"]
     );
     if (previewElement) {
       let keyLabel = previewElement.querySelector("strong");
@@ -410,20 +412,20 @@ function saveValue(path) {
     input.readOnly = true;
     input.setAttribute("data-original-value", newValue);
     const suggestionInput = document.querySelector(
-      `input[data-ai-suggestion="${path}"]`
+      input[data-ai-suggestion="${path}"]
     );
     if (suggestionInput) {
       suggestionInput.value = "";
     }
     const saveButton = document.querySelector(
-      `button.save-button[onclick="saveValue('${path}')"]`
+      button.save-button[onclick="saveValue('${path}')"]
     );
     if (saveButton) {
       saveButton.disabled = true;
     }
     if (aiButton) aiButton.style.display = "";
     if (editButton) editButton.style.display = "";
-    const successDiv = document.getElementById(`success-${path}`);
+    const successDiv = document.getElementById(success-${path});
     if (successDiv) {
       successDiv.textContent = "Changes saved successfully";
       successDiv.style.display = "block";
@@ -431,11 +433,11 @@ function saveValue(path) {
         successDiv.style.display = "none";
       }, 3000);
     }
-    const errorDiv = document.getElementById(`error-${path}`);
+    const errorDiv = document.getElementById(error-${path});
     if (errorDiv) errorDiv.style.display = "none";
   } catch (error) {
     console.error("Error saving value:", error);
-    const errorDiv = document.getElementById(`error-${path}`);
+    const errorDiv = document.getElementById(error-${path});
     if (errorDiv) {
       errorDiv.textContent = "Failed to save changes";
       errorDiv.style.display = "block";
@@ -445,22 +447,22 @@ function saveValue(path) {
 
 // Get AI Suggestions
 async function updateValueWithAI(path) {
-  const errorDiv = document.getElementById(`error-${path}`);
-  const successDiv = document.getElementById(`success-${path}`);
+  const errorDiv = document.getElementById(error-${path});
+  const successDiv = document.getElementById(success-${path});
   const currentValue = document.querySelector(
-    `input[data-key="${path}"]`
+    input[data-key="${path}"]
   ).value;
   const customPrompt = document.querySelector(
-    `textarea[data-key="${path}"]`
+    textarea[data-key="${path}"]
   ).value;
   const suggestionInput = document.querySelector(
-    `input[data-ai-suggestion="${path}"]`
+    input[data-ai-suggestion="${path}"]
   );
   const saveButton = document.querySelector(
-    `button.save-button[onclick="saveValue('${path}')"]`
+    button.save-button[onclick="saveValue('${path}')"]
   );
   const editButton = document.querySelector(
-    `button.edit-button[onclick="editValue('${path}')"]`
+    button.edit-button[onclick="editValue('${path}')"]
   );
   try {
     const response = await fetch("/update_value", {
@@ -669,7 +671,86 @@ function addSubKeyValuePair() {
   document.getElementById("subValue").value = "";
   closeAddSubKeyValueDialog();
 }
+// Questionnaire functions
+async function showQuestionnaire() {
+    try {
+        // Generate questions
+        const response = await fetch('/generate-questions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ document: window.currentDocument })
+        });
 
+        if (!response.ok) throw new Error('Failed to generate questions');
+
+        const questions = await response.json();
+
+        // Create HTML for questions
+        const questionsHtml = Object.entries(questions).map(([key, question]) => `
+            <div class="question-item" style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">${question}</label>
+                <input type="text" class="question-input" data-key="${key}" style="width: 100%; padding: 8px;">
+            </div>
+        `).join('');
+
+        // Insert questions into modal
+        document.getElementById('questionsContainer').innerHTML = questionsHtml;
+
+        // Show modal
+        document.getElementById('questionnaireModal').style.display = 'block';
+
+    } catch (error) {
+        console.error('Error showing questionnaire:', error);
+        // If there's an error, skip questionnaire and show editor
+        closeQuestionnaireModal();
+    }
+}
+
+function closeQuestionnaireModal() {
+    document.getElementById('questionnaireModal').style.display = 'none';
+}
+
+async function submitQuestionnaire() {
+    try {
+        // Collect answers
+        const answers = {};
+        document.querySelectorAll('.question-input').forEach(input => {
+            answers[input.dataset.key] = input.value.trim();
+        });
+
+        // Get questions from inputs
+        const questions = {};
+        document.querySelectorAll('.question-input').forEach(input => {
+            questions[input.dataset.key] = input.previousElementSibling.textContent;
+        });
+
+        // Submit answers
+        const response = await fetch('/fill-template', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                document: window.currentDocument,
+                questions,
+                answers
+            })
+        });
+
+        if (!response.ok) throw new Error('Failed to process answers');
+
+        // Update document with filled template
+        const filledTemplate = await response.json();
+        window.currentDocument = filledTemplate;
+
+        // Close modal and update editor
+        closeQuestionnaireModal();
+        updatePreview();
+        updateKeyEditor();
+
+    } catch (error) {
+        console.error('Error submitting questionnaire:', error);
+        alert('Error processing answers. Please try again or skip the questionnaire.');
+    }
+}
 /* --- Expose functions to global scope --- */
 window.openAddKeyValueDialog = openAddKeyValueDialog;
 window.closeAddKeyValueDialog = closeAddKeyValueDialog;
@@ -677,3 +758,5 @@ window.addKeyValuePair = addKeyValuePair;
 window.openAddSubKeyValueDialog = openAddSubKeyValueDialog;
 window.closeAddSubKeyValueDialog = closeAddSubKeyValueDialog;
 window.addSubKeyValuePair = addSubKeyValuePair;
+window.closeQuestionnaireModal = closeQuestionnaireModal;
+window.submitQuestionnaire = submitQuestionnaire;
