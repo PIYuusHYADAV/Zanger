@@ -24,10 +24,10 @@
     },
     "1. PARTIES": {
       "1": {
-        "content": "[*[INDIVIDUAL NAME]* of *[address]*] OR [*[COMPANY NAME]*, a company incorporated in *[jurisdiction]* (registration number *[number]*) having its registered office at *[address]*] (\"the Consultant\")"
+        "content": "*[INDIVIDUAL NAME]* of *[address]* OR *[COMPANY NAME]*, a company incorporated in *[jurisdiction]* (registration number *[number]*) having its registered office at *[address]*] (\"the Consultant\")"
       },
       "2": {
-        "content": "[*[INDIVIDUAL NAME]* of *[address]*] OR [*[COMPANY NAME]*, a company incorporated in *[jurisdiction]* (registration number *[registration number]*) having its registered office at *[address]*] (\"the Client\")"
+        "content": "*[INDIVIDUAL NAME]* of *[address]* OR *[COMPANY NAME]*, a company incorporated in *[jurisdiction]* (registration number *[registration number]*) having its registered office at *[address]*] (\"the Client\")"
       }
     },
     "AGREEMENT": {
@@ -247,8 +247,8 @@
     "EXECUTION": {
       "content": "The parties have indicated their acceptance of this Agreement by executing it below.",
       "signature_blocks": {
-        "consultant": "SIGNED BY [*[individual name]* on [...........], the Consultant] OR [*[individual name]* on [...........], duly authorised for and on behalf of the Consultant]:",
-        "client": "SIGNED BY [*[individual name]* on [...........], the Client] OR [*[individual name]* on [...........], duly authorised for and on behalf of the Client]:"
+        "consultant": "SIGNED BY *[individual name]* on *[...........]*, *[the Consultant]* OR *[individual name]* on *[...........]*, *[duly authorised for and on behalf of the Consultant]*:",
+        "client": "SIGNED BY *[individual name]* on *[...........]*, *[the Client]* OR *[individual name]* on*[...........]*, *[duly authorised for and on behalf of the Client]*:"
       }
     }
   }
