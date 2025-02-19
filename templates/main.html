@@ -41,6 +41,7 @@
         border-bottom: 2px solid #ddd;
         padding-bottom: 10px;
       }
+      /* Button Styling */
       .btn {
         font-size: 0.9rem;
         padding: 8px 14px;
@@ -78,6 +79,7 @@
       .btn-cancel:hover {
         background-color: #c82333;
       }
+      /* Document Preview */
       .document-preview {
         font-family: "Times New Roman", Times, serif;
         font-size: 14px;
@@ -90,15 +92,6 @@
         overflow-y: auto;
         color: #333;
         word-wrap: break-word;
-      }
-      .document-line {
-        margin-bottom: 10px;
-      }
-      .main-section h5 {
-        margin: 0;
-      }
-      .sub-section h6 {
-        margin: 0;
       }
       /* Modal styling */
       .modal {
@@ -160,25 +153,6 @@
         margin-top: 15px;
         text-align: right;
       }
-      /* Key Editor */
-      .key-editor-item {
-        border-bottom: 1px solid #eee;
-        padding: 10px 0;
-      }
-      .value-section {
-        margin-top: 5px;
-      }
-      .value-section input,
-      .value-section textarea {
-        width: 100%;
-        margin-top: 5px;
-      }
-      .error {
-        color: red;
-      }
-      .success {
-        color: green;
-      }
     </style>
   </head>
   <body>
@@ -187,6 +161,7 @@
       <div class="panel">
         <h2>
           Document Preview
+
           <div id="editorControls">
             <button
               class="btn btn-edit"
@@ -233,9 +208,9 @@
       </div>
     </div>
 
-    <!-- Modal for Inserting New Content -->
+    <!-- Modal for Inserting New Content (with font styling options) -->
     <div id="insertDialog" class="modal" style="display: none">
-      <div class="modal-content">
+      <div class="modal-content" id="modalContent">
         <span class="close" onclick="closeInsertDialog()">&times;</span>
         <h3>Insert New Content</h3>
         <div
@@ -245,6 +220,7 @@
         >
           Please enter at least a key or a value.
         </div>
+        <!-- Key Input and Styling Options -->
         <label for="newKey">Key:</label>
         <input type="text" id="newKey" placeholder="Enter key" />
         <label for="keyFontSize">Key Font Size (px):</label>
@@ -273,6 +249,7 @@
           <option value="none">None</option>
           <option value="underline">Underline</option>
         </select>
+        <!-- Value Input and Styling Options -->
         <label for="newValue">Value:</label>
         <input type="text" id="newValue" placeholder="Enter value" />
         <label for="valueFontSize">Value Font Size (px):</label>
@@ -312,9 +289,9 @@
       </div>
     </div>
 
-    <!-- Modal for Adding Key-Value Pair under AGREEMENT -->
+    <!-- Modal for Adding Key-Value Pair under ASSIGNMENT (no styling options) -->
     <div id="addKeyValueDialog" class="modal" style="display: none">
-      <div class="modal-content">
+      <div class="modal-content" id="addModalContent">
         <span class="close" onclick="closeAddKeyValueDialog()">&times;</span>
         <h3>Add Key-Value Pair (AGREEMENT)</h3>
         <div
@@ -337,9 +314,9 @@
       </div>
     </div>
 
-    <!-- Modal for Adding Sub Key-Value Pair -->
+    <!-- Modal for Adding Sub Key-Value Pair (no styling options) -->
     <div id="addSubKeyValueDialog" class="modal" style="display: none">
-      <div class="modal-content">
+      <div class="modal-content" id="subModalContent">
         <span class="close" onclick="closeAddSubKeyValueDialog()">&times;</span>
         <h3>Add Sub Key-Value Pair</h3>
         <div
@@ -349,8 +326,10 @@
         >
           Please select a parent key and enter both sub key and sub value.
         </div>
-        <label for="parentKeySelect">Parent Key (in AGREEMENT):</label>
+        <!-- Parent Key Dropdown (populated dynamically) -->
+        <label for="parentKeySelect">Parent Key (in Agreement):</label>
         <select id="parentKeySelect"></select>
+        <!-- Sub Key and Sub Value Inputs -->
         <label for="subKey">Sub Key:</label>
         <input type="text" id="subKey" placeholder="Enter sub key" />
         <label for="subValue">Sub Value:</label>
@@ -365,9 +344,28 @@
         </div>
       </div>
     </div>
+    <div id="questionnaireModal" class="modal" style="display: none;">
+  <div class="modal-content" style="width: 80%; max-width: 800px;">
+    <span class="close" onclick="closeQuestionnaireModal()">&times;</span>
+    <h3>Complete Document Details</h3>
+
+    <div id="questionsContainer" style="margin-top: 20px;">
+      <!-- Questions will be dynamically inserted here -->
+    </div>
+
+    <div class="modal-buttons">
+      <button class="btn btn-add" onclick="submitQuestionnaire()">
+        Continue to Editor
+      </button>
+      <button class="btn btn-cancel" onclick="closeQuestionnaireModal()">
+        Skip Questionnaire
+      </button>
+    </div>
+  </div>
+</div>
 
     <script>
-      // Make the document JSON available on window
+      // Initialize document data from server
       window.currentDocument = {{ document | tojson | safe }};
     </script>
     <script src="{{ static_url('main.js') }}"></script>
