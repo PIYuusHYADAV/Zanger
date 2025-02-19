@@ -157,8 +157,21 @@ async def generate_questions(request: QuestionGenerationRequest):
 async def update_value(request: UpdateValueRequest):
     """Get AI suggestions for document values."""
     response = await azure_chat_completion([
-        {"role": "system", "content": "You are a legal document assistant. Provide direct, concise responses without explanations."},
-        {"role": "user", "content": f"Suggest a value for this field in the document. Field: '{request.key}', Current value: {request.current_value}. Context: {request.custom_prompt}"}
+        {
+            "role": "system",
+            "content": (
+                "You are a helpful assistant that provides appropriate values for legal document fields. "
+                "Your suggestions should maintain legal accuracy and clarity while potentially improving the language. "
+                "Respond in JSON format with a single 'value' key containing your suggestion."
+            )
+        },
+        {
+            "role": "user",
+            "content": (
+                f"Suggest a value for this field in the document. Field: '{request.key}', "
+                f"Current value: {request.current_value}. Context: {request.custom_prompt}"
+            )
+        }
     ])
 
     if isinstance(response, str):
@@ -168,7 +181,8 @@ async def update_value(request: UpdateValueRequest):
         )
 
     try:
-        new_value = response.choices[0].message.content.strip()
+        # Using JSON parsing logic from the Flask version
+        new_value = json.loads(response.choices[0].message.content)["value"]
         logger.info(f"Generated new value for {request.key}: {new_value}")
         return {"value": new_value}
     except Exception as e:
