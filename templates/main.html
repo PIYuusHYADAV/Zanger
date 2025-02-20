@@ -368,6 +368,7 @@
       // Initialize document data from server
       window.currentDocument = {{ document | tojson | safe }};
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/html-docx-js/dist/html-docx.js"></script>
     <script src="{{ static_url('main.js') }}"></script>
   </body>
 </html>
