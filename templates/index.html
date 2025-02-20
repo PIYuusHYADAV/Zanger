@@ -369,6 +369,7 @@
       window.currentDocument = {{ document | tojson | safe }};
     </script>
     <script src="https://cdn.jsdelivr.net/npm/html-docx-js/dist/html-docx.js"></script>
-    <script src="{{ static_url('script.js') }}"></script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+
   </body>
 </html>
