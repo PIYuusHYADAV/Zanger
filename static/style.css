@@ -187,6 +187,23 @@ h2 {
 .success {
   color: #2ecc71;
 }
+.error-message, .success-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px;
+    border-radius: 4px;
+    z-index: 1000;
+    color: white;
+}
+
+.error-message {
+    background: #f44336;
+}
+
+.success-message {
+    background: #4CAF50;
+}
 
 /* Responsive Design */
 @media (max-width: 1200px) {
